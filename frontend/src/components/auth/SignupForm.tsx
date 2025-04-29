@@ -3,6 +3,10 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { SignupFormData } from '../../types/auth';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/contexts/ToastContext";
 
 export default function SignupForm() {
   const navigate = useNavigate();
@@ -15,6 +19,7 @@ export default function SignupForm() {
     confirmPassword: '',
     name: ''
   });
+  const { showToast } = useToast();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -28,6 +33,7 @@ export default function SignupForm() {
     setError('');
 
     if (formData.password !== formData.confirmPassword) {
+      showToast("Passwords do not match", "error");
       setError('Passwords do not match');
       return;
     }
@@ -36,8 +42,10 @@ export default function SignupForm() {
 
     try {
       await signup(formData.email, formData.password, formData.name);
+      showToast("Registration successful!", "success");
       navigate('/');
     } catch (err: any) {
+      showToast(err?.response?.data?.message || "Signup failed", "error");
       setError(err.response?.data?.message || 'Failed to create account');
     } finally {
       setLoading(false);
@@ -54,8 +62,8 @@ export default function SignupForm() {
       )}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700">Name</label>
-          <input
+          <Label htmlFor='name' className="block text-sm font-medium text-gray-700">Name</Label>
+          <Input
             type="text"
             name="name"
             value={formData.name}
@@ -65,8 +73,8 @@ export default function SignupForm() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">Email</label>
-          <input
+          <Label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</Label>
+          <Input
             type="email"
             name="email"
             value={formData.email}
@@ -76,8 +84,8 @@ export default function SignupForm() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">Password</label>
-          <input
+          <label htmlFor='password' className="block text-sm font-medium text-gray-700">Password</label>
+          <Input
             type="password"
             name="password"
             value={formData.password}
@@ -88,17 +96,17 @@ export default function SignupForm() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">Confirm Password</label>
-          <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" />
+          <label htmlFor='confirmPassword' className="block text-sm font-medium text-gray-700">Confirm Password</label>
+          <Input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" />
         </div>
         <div>
-          <button
+          <Button
             type="submit"
             disabled={loading}
-            className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+            className="w-full py-2 px-4 border rounded-md shadow-sm "
           >
             {loading ? 'Creating Account...' : 'Sign Up'}
-          </button>
+          </Button>
         </div>
       </form>
     </div>

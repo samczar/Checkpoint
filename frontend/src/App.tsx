@@ -1,16 +1,27 @@
 // frontend/src/App.tsx
-import React from 'react';
-import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import StandupForm from './components/StandupForm';
-import TeamView from './components/TeamView';
-import HistoryView from './components/HistoryView';
-import LoginForm from './components/auth/LoginForm';
-import SignupForm from './components/auth/SignupForm';
-import ProtectedRoute from './components/auth/ProtectedRoute';
+import React from "react";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Link,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import StandupForm from "./components/StandupForm";
+import TeamView from "./components/TeamView";
+import HistoryView from "./components/HistoryView";
+import LoginForm from "./components/auth/LoginForm";
+import SignupForm from "./components/auth/SignupForm";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
+import { Button } from "./components/ui/button";
+import { ToastProvider } from "@/contexts/ToastContext";
 
 function NavBar() {
   const { isAuthenticated, logout, user } = useAuth();
+  const location = useLocation();
+  const currentPath = location.pathname;
 
   return (
     <nav className="p-4 bg-gray-100">
@@ -18,9 +29,36 @@ function NavBar() {
         <div className="flex gap-4">
           {isAuthenticated ? (
             <>
-              <Link to="/" className="hover:text-blue-600">Standup</Link>
-              <Link to="/team" className="hover:text-blue-600">Team</Link>
-              <Link to="/history" className="hover:text-blue-600">History</Link>
+              <Link
+                to="/"
+                className={`${
+                  currentPath === "/"
+                    ? "text-blue-600 font-bold"
+                    : "text-gray-700"
+                } hover:text-blue-600`}
+              >
+                Standup
+              </Link>
+              <Link
+                to="/team"
+                className={`${
+                  currentPath.startsWith("/team")
+                    ? "text-blue-600 font-bold"
+                    : "text-gray-700"
+                } hover:text-blue-600`}
+              >
+                Team
+              </Link>
+              <Link
+                to="/history"
+                className={`${
+                  currentPath.startsWith("/history")
+                    ? "text-blue-600 font-bold"
+                    : "text-gray-700"
+                } hover:text-blue-600`}
+              >
+                History
+              </Link>
             </>
           ) : (
             <span className="font-bold">Checkpoint</span>
@@ -30,24 +68,19 @@ function NavBar() {
           {isAuthenticated ? (
             <>
               <span className="text-sm text-gray-600">Hello, {user?.name}</span>
-              <button
-                onClick={logout}
-                className="text-sm text-red-600 hover:text-red-800"
-              >
-                Logout
-              </button>
+              <Button onClick={logout}>Logout</Button>
             </>
           ) : (
             <>
-              <Link 
+              <Link
                 to="/login"
-                className="text-sm text-blue-600 hover:text-blue-800"
+                className="text-sm text-zinc-600 hover:text-blue-800"
               >
                 Login
               </Link>
               <Link
                 to="/signup"
-                className="text-sm bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                className="text-sm bg-zinc-900 text-white px-4 py-2 rounded hover:bg-zinc-700"
               >
                 Sign Up
               </Link>
@@ -67,59 +100,61 @@ function AuthenticatedRedirect({ children }: { children: React.ReactNode }) {
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <NavBar />
-        <div className="max-w-7xl mx-auto p-4">
-          <Routes>
-            {/* Public Routes */}
-            <Route 
-              path="/login" 
-              element={
-                <AuthenticatedRedirect>
-                  <LoginForm />
-                </AuthenticatedRedirect>
-              } 
-            />
-            <Route 
-              path="/signup" 
-              element={
-                <AuthenticatedRedirect>
-                  <SignupForm />
-                </AuthenticatedRedirect>
-              } 
-            />
+      <ToastProvider>
+        <BrowserRouter>
+          <NavBar />
+          <div className="max-w-7xl mx-auto p-4">
+            <Routes>
+              {/* Public Routes */}
+              <Route
+                path="/login"
+                element={
+                  <AuthenticatedRedirect>
+                    <LoginForm />
+                  </AuthenticatedRedirect>
+                }
+              />
+              <Route
+                path="/signup"
+                element={
+                  <AuthenticatedRedirect>
+                    <SignupForm />
+                  </AuthenticatedRedirect>
+                }
+              />
 
-            {/* Protected Routes */}
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <StandupForm />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/team"
-              element={
-                <ProtectedRoute>
-                  <TeamView />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/history"
-              element={
-                <ProtectedRoute>
-                  <HistoryView />
-                </ProtectedRoute>
-              }
-            />
+              {/* Protected Routes */}
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <StandupForm />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/team"
+                element={
+                  <ProtectedRoute>
+                    <TeamView />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/history"
+                element={
+                  <ProtectedRoute>
+                    <HistoryView />
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* Catch all route */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </div>
-      </BrowserRouter>
+              {/* Catch all route */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </div>
+        </BrowserRouter>
+      </ToastProvider>
     </AuthProvider>
   );
 }

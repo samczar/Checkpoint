@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/contexts/ToastContext";
 
 export default function StandupForm() {
   const { isAuthenticated } = useAuth();
@@ -27,23 +28,12 @@ export default function StandupForm() {
   const [standups, setStandups] = useState([]);
   const [error, setError] = useState("");
   const [editMode, setEditMode] = useState(false);
+  const [hasEntryToday, setHasEntryToday] = useState(false);
+  const { showToast } = useToast();
 
   // Get today's date in YYYY-MM-DD format
   const today = new Date().toISOString().slice(0, 10);
-  const didInit = useRef(false);
 
-  // Only auto-load today's standup if not editing
-  // useEffect(() => {
-  //   if (!didInit.current) {
-  //     api.get('/standups/mine').then(res => {
-  //       const entry = res.data.find((s: any) => s.date === today);
-  //       if (entry) setForm({ ...entry, date: today });
-  //       else setForm({ yesterday: '', today: '', blockers: '', date: today });
-  //     });
-  //     didInit.current = true;
-  //   }
-  //   // eslint-disable-next-line
-  // }, [today]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -52,9 +42,11 @@ export default function StandupForm() {
         .getMine()
         .then((response) => {
           // Filter standups to only today's
-          const todaysStandups = response.data.filter(
+          const todaysStandups = response.data.standups.filter(
             (s: any) => s.date === today
           );
+          const exists = todaysStandups.some((s: any) => s.date === today);
+          setHasEntryToday(exists);
           setStandups(todaysStandups);
           setLoading(false);
         })
@@ -72,27 +64,31 @@ export default function StandupForm() {
     setForm((f) => ({ ...f, blockers: value }));
   };
 
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    await api.post("/standups", form);
-    setLoading(false);
-    setEditMode(false);
-    // Optionally, refresh standups after submit
-    // Refresh standups after submit, filtered to today
-    if (isAuthenticated) {
-      standupService
-        .getMine()
-        .then((response) => {
-          const todaysStandups = response.data.filter(
-            (s: any) => s.date === today
-          );
-          setStandups(todaysStandups);
-        })
-        .catch(() => {});
+    try {
+      await api.post('/standups', form);
+      showToast(editMode ? "Standup updated!" : "Standup saved!", "success");
+      setEditMode(false);
+      if (isAuthenticated) {
+        standupService
+          .getMine()
+          .then((response) => {
+            const todaysStandups = response.data.standups.filter(
+              (s: any) => s.date === today
+            );
+            setStandups(todaysStandups);
+          })
+          .catch(() => {});
+      }
+    } catch (err) {
+      showToast("Failed to save standup", "error");
+    } finally {
+      setLoading(false);
+      setForm({ yesterday: "", today: "", blockers: "", date: today });
     }
-    // Reset form to today's standup after editing
-    setForm({ yesterday: "", today: "", blockers: "", date: today });
   };
 
   // Handler to edit a standup from history (does not trigger today's auto-load)
@@ -132,9 +128,22 @@ export default function StandupForm() {
             </SelectGroup>
           </SelectContent>
         </Select>
-        <Button type="submit" className="px-4 py-2 rounded" disabled={loading}>
+        <Button type="submit" className="px-4 py-2 rounded" disabled={loading || (hasEntryToday && !editMode)}>
           {loading ? "Saving..." : "Save Standup"}
         </Button>
+        {editMode && (
+          <Button
+            type="button"
+            variant="secondary"
+            className="ml-2 px-4 py-2 rounded"
+            onClick={() => {
+              setEditMode(false);
+              setForm({ yesterday: '', today: '', blockers: '', date: today });
+            }}
+          >
+            Cancel
+          </Button>
+        )}
       </form>
       {/* Cards for users' tasks for the day */}
       <div className="mt-8 grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
@@ -168,6 +177,7 @@ export default function StandupForm() {
                     type="button"
                     className="mt-2 px-3 py-1 rounded bg-yellow-400 text-black"
                     onClick={() => handleEdit(standup)}
+                    disabled={editMode}
                   >
                     Edit
                   </Button>

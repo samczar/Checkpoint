@@ -1,12 +1,12 @@
 // frontend/src/components/TeamView.tsx
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
+import { Button } from "@/components/ui/button";
 
 interface User {
   _id: string;
   name: string;
   email: string;
-  avatarUrl?: string;
 }
 
 interface TeamStandup {
@@ -23,15 +23,32 @@ export default function TeamView() {
   const [teamStandups, setTeamStandups] = useState<TeamStandup[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [range, setRange] = useState<'day' | 'week'>('day');
+  const [users, setUsers] = useState<User[]>([]);
+  const [userFilter, setUserFilter] = useState('');
   const [dateFilter, setDateFilter] = useState(new Date().toISOString().slice(0, 10));
   const [view, setView] = useState<'cards' | 'table'>('cards');
 
-  const fetchTeamStandups = async (date: string) => {
+    // Fetch all users for the user filter dropdown
+    useEffect(() => {
+      api.get('/auth/users').then(res => setUsers(res.data)).catch(() => {});
+    }, []);
+
+      // Fetch most recent standup from each user, with optional filters
+  const fetchTeamStandups = async () => {
     setLoading(true);
+    setError('');
     try {
-      const res = await api.get('/team/standups', { 
-        params: { date } 
-      });
+      const params: any = {};
+      if (range === 'week') {
+        params.range = 'week';
+      } else if (dateFilter) {
+        params.date = dateFilter;
+      }
+      console.log('Fetching team standups with params:', params);
+      console.log('userFilter ', userFilter)
+      if (userFilter) params.userId = userFilter;
+      const res = await api.get('/standups/team', { params });
       setTeamStandups(res.data);
     } catch (err: any) {
       setError('Failed to load team standups');
@@ -41,8 +58,12 @@ export default function TeamView() {
   };
 
   useEffect(() => {
-    fetchTeamStandups(dateFilter);
-  }, [dateFilter]);
+    fetchTeamStandups();
+    // eslint-disable-next-line
+  }, [dateFilter, range, userFilter]);
+
+
+  console.log('Team standups fetched successfully:', teamStandups);
 
   const formatDate = (dateString: string) => {
     const options: Intl.DateTimeFormatOptions = { 
@@ -56,27 +77,24 @@ export default function TeamView() {
 
   const UserAvatar = ({ user }: { user: User }) => (
     <div className="flex items-center space-x-2">
-      {user.avatarUrl ? (
-        <img
-          src={user.avatarUrl}
-          alt={user.name}
-          className="w-8 h-8 rounded-full"
-        />
-      ) : (
+    
         <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white">
-          {user.name.charAt(0).toUpperCase()}
+          {user?.name.charAt(0).toUpperCase()}
         </div>
-      )}
-      <span className="font-medium">{user.name}</span>
+    
+      <span className="font-medium">{user?.name}</span>
     </div>
   );
-
-  const CardView = () => (
+const CardView = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {teamStandups.map((standup) => (
-        <div key={standup._id} className="p-4 border rounded-lg shadow-sm hover:shadow-md transition-shadow">
+        <div
+          key={standup._id}
+          className="p-4 border rounded-lg shadow-sm hover:shadow-md transition-shadow"
+        >
           <div className="mb-4">
             <UserAvatar user={standup.user} />
+            <div className="text-xs text-gray-500">{formatDate(standup.date)}</div>
           </div>
           <div className="space-y-3">
             <div>
@@ -108,6 +126,9 @@ export default function TeamView() {
               Team Member
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Date
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Yesterday
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -124,6 +145,7 @@ export default function TeamView() {
               <td className="px-6 py-4 whitespace-nowrap">
                 <UserAvatar user={standup.user} />
               </td>
+              <td className="px-6 py-4 text-xs text-gray-500">{formatDate(standup.date)}</td>
               <td className="px-6 py-4">
                 <p className="text-sm text-gray-900">{standup.yesterday}</p>
               </td>
@@ -144,46 +166,65 @@ export default function TeamView() {
     <div className="max-w-7xl mx-auto">
       <div className="mb-6">
         <h2 className="text-2xl font-bold">Team Standups</h2>
-        <p className="text-gray-600">{formatDate(dateFilter)}</p>
       </div>
 
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center space-x-4">
+      <div className="flex flex-wrap gap-4 items-center mb-6">
+        <div className="flex items-center space-x-2">
+          <Button
+            onClick={() => {
+              setRange('day');
+              setDateFilter('');
+            }}
+            variant={ range === 'day' ? 'default'  : 'secondary' }
+            
+          >
+            By Date
+          </Button>
+          <Button
+            onClick={() => {
+              setRange('week');
+              setDateFilter('');
+            }}
+            variant={ range === 'week' ? 'default'  : 'secondary' }
+          >
+            Last 7 Days
+          </Button>
+        </div>
+        {range === 'day' && (
           <input
             type="date"
             value={dateFilter}
             onChange={(e) => setDateFilter(e.target.value)}
             className="border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Filter by date"
           />
-          <button
-            onClick={() => setDateFilter(new Date().toISOString().slice(0, 10))}
-            className="text-blue-600 hover:text-blue-800"
-          >
-            Today
-          </button>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <button
+        )}
+        <select
+          value={userFilter}
+          onChange={e => {
+            console.log('User filter changed:', e.target.value);
+            setUserFilter(e.target.value)}}
+          className="border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">All Users</option>
+          {users.map(user => (
+            <option key={user._id} value={user._id}>{user.name}</option>
+          ))}
+        </select>
+        <div className="flex items-center space-x-2 ml-auto">
+          <Button
             onClick={() => setView('cards')}
-            className={`px-3 py-1 rounded-md ${
-              view === 'cards' 
-                ? 'bg-blue-600 text-white' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+            variant={view === 'cards' ? 'default' : 'secondary'}
           >
             Cards
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => setView('table')}
-            className={`px-3 py-1 rounded-md ${
-              view === 'table' 
-                ? 'bg-blue-600 text-white' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+            variant={view === 'table' ? 'default' : 'secondary'}
+            
           >
             Table
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -199,7 +240,7 @@ export default function TeamView() {
         </div>
       ) : teamStandups.length === 0 ? (
         <div className="text-center py-8 bg-gray-50 rounded-lg">
-          <p className="text-gray-500">No standups found for this date</p>
+          <p className="text-gray-500">No standups found for this filter</p>
         </div>
       ) : (
         view === 'cards' ? <CardView /> : <TableView />

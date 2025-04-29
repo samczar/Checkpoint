@@ -3,6 +3,10 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { LoginFormData } from '../../types/auth';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/contexts/ToastContext";
 
 export default function LoginForm() {
   const navigate = useNavigate();
@@ -13,6 +17,8 @@ export default function LoginForm() {
     email: '',
     password: ''
   });
+
+  const { showToast } = useToast();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -47,8 +53,10 @@ export default function LoginForm() {
 
     try {
       await login(formData.email, formData.password);
+      showToast("Authentication successful!", "success");
       navigate('/');
     } catch (err: any) {
+      showToast(err?.response?.data?.message || "Login failed", "error");
       setError(err.response?.data?.message || 'Failed to login');
     } finally {
       setLoading(false);
@@ -65,8 +73,8 @@ export default function LoginForm() {
       )}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700">Email</label>
-          <input
+          <Label  htmlFor="email" className="block text-sm font-medium text-gray-700">Email</Label>
+          <Input
             type="email"
             name="email"
             value={formData.email}
@@ -76,8 +84,8 @@ export default function LoginForm() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">Password</label>
-          <input
+          <Label  htmlFor="password" className="block text-sm font-medium text-gray-700">Password</Label>
+          <Input
             type="password"
             name="password"
             value={formData.password}
@@ -86,13 +94,11 @@ export default function LoginForm() {
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           />
         </div>
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
-        >
+        <Button type="submit"
+          className='w-full py-2 px-4 border rounded-md'
+          disabled={loading}>
           {loading ? 'Logging in...' : 'Login'}
-        </button>
+        </Button>
         <div className="text-center text-sm text-gray-600">
           Don't have an account?{' '}
           <Link to="/signup" className="text-blue-600 hover:text-blue-800">

@@ -113,6 +113,18 @@ export const authService = {
     return response.data;
 },
 
+  // Get all users
+  getUsers: async () => {
+    const response = await api.get('/auth/users');
+    return response.data;
+  },
+
+  // Get a single user by ID
+  getUser: async (id: string) => {
+    const response = await api.get(`/auth/user/${id}`);
+    return response.data;
+  },
+
   // Logout (client-side only)
   logout: () => {
     localStorage.removeItem('token');
