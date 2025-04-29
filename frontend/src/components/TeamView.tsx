@@ -1,7 +1,8 @@
 // frontend/src/components/TeamView.tsx
-import  { useEffect, useState } from 'react';
-import api from '../services/api';
+import { useEffect, useState } from "react";
+import api from "../services/api";
 import { Button } from "@/components/ui/button";
+import { DateTime } from "luxon";
 
 interface User {
   _id: string;
@@ -22,36 +23,42 @@ interface TeamStandup {
 export default function TeamView() {
   const [teamStandups, setTeamStandups] = useState<TeamStandup[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [range, setRange] = useState<'day' | 'week'>('day');
+  const [error, setError] = useState("");
+  const [range, setRange] = useState<"day" | "week">("day");
   const [users, setUsers] = useState<User[]>([]);
-  const [userFilter, setUserFilter] = useState('');
-  const [dateFilter, setDateFilter] = useState(new Date().toISOString().slice(0, 10));
-  const [view, setView] = useState<'cards' | 'table'>('cards');
+  const [userFilter, setUserFilter] = useState("");
+  // Get today's date in YYYY-MM-DD format
+  const today = DateTime.now()
+    .setZone("Pacific/Auckland")
+    .toFormat("yyyy-MM-dd");
+  const [dateFilter, setDateFilter] = useState(today);
+  const [view, setView] = useState<"cards" | "table">("cards");
 
-    // Fetch all users for the user filter dropdown
-    useEffect(() => {
-      api.get('/auth/users').then(res => setUsers(res.data)).catch(() => {});
-    }, []);
+  // Fetch all users for the user filter dropdown
+  useEffect(() => {
+    api
+      .get("/auth/users")
+      .then((res) => setUsers(res.data))
+      .catch(() => {});
+  }, []);
 
-      // Fetch most recent standup from each user, with optional filters
+  // Fetch most recent standup from each user, with optional filters
   const fetchTeamStandups = async () => {
     setLoading(true);
-    setError('');
+    setError("");
     try {
       const params: any = {};
-      if (range === 'week') {
-        params.range = 'week';
+      if (range === "week") {
+        params.range = "week";
       } else if (dateFilter) {
         params.date = dateFilter;
       }
-      console.log('Fetching team standups with params:', params);
-      console.log('userFilter ', userFilter)
+
       if (userFilter) params.userId = userFilter;
-      const res = await api.get('/standups/team', { params });
+      const res = await api.get("/standups/team", { params });
       setTeamStandups(res.data);
     } catch (err: any) {
-      setError('Failed to load team standups');
+      setError("Failed to load team standups");
     } finally {
       setLoading(false);
     }
@@ -62,28 +69,26 @@ export default function TeamView() {
     // eslint-disable-next-line
   }, [dateFilter, range, userFilter]);
 
-
   const formatDate = (dateString: string) => {
-    const options: Intl.DateTimeFormatOptions = { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    const options: Intl.DateTimeFormatOptions = {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     };
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
   const UserAvatar = ({ user }: { user: User }) => (
     <div className="flex items-center space-x-2">
-    
-        <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white">
-          {user?.name.charAt(0).toUpperCase()}
-        </div>
-    
+      <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white">
+        {user?.name.charAt(0).toUpperCase()}
+      </div>
+
       <span className="font-medium">{user?.name}</span>
     </div>
   );
-const CardView = () => (
+  const CardView = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {teamStandups.map((standup) => (
         <div
@@ -92,7 +97,9 @@ const CardView = () => (
         >
           <div className="mb-4">
             <UserAvatar user={standup.user} />
-            <div className="text-xs text-gray-500">{formatDate(standup.date)}</div>
+            <div className="text-xs text-gray-500">
+              {formatDate(standup.date)}
+            </div>
           </div>
           <div className="space-y-3">
             <div>
@@ -143,7 +150,9 @@ const CardView = () => (
               <td className="px-6 py-4 whitespace-nowrap">
                 <UserAvatar user={standup.user} />
               </td>
-              <td className="px-6 py-4 text-xs text-gray-500">{formatDate(standup.date)}</td>
+              <td className="px-6 py-4 text-xs text-gray-500">
+                {formatDate(standup.date)}
+              </td>
               <td className="px-6 py-4">
                 <p className="text-sm text-gray-900">{standup.yesterday}</p>
               </td>
@@ -151,7 +160,9 @@ const CardView = () => (
                 <p className="text-sm text-gray-900">{standup.today}</p>
               </td>
               <td className="px-6 py-4">
-                <p className="text-sm text-red-600">{standup.blockers || '-'}</p>
+                <p className="text-sm text-red-600">
+                  {standup.blockers || "-"}
+                </p>
               </td>
             </tr>
           ))}
@@ -170,25 +181,24 @@ const CardView = () => (
         <div className="flex items-center space-x-2">
           <Button
             onClick={() => {
-              setRange('day');
-              setDateFilter('');
+              setRange("day");
+              setDateFilter("");
             }}
-            variant={ range === 'day' ? 'default'  : 'secondary' }
-            
+            variant={range === "day" ? "default" : "secondary"}
           >
             By Date
           </Button>
           <Button
             onClick={() => {
-              setRange('week');
-              setDateFilter('');
+              setRange("week");
+              setDateFilter("");
             }}
-            variant={ range === 'week' ? 'default'  : 'secondary' }
+            variant={range === "week" ? "default" : "secondary"}
           >
             Last 7 Days
           </Button>
         </div>
-        {range === 'day' && (
+        {range === "day" && (
           <input
             type="date"
             value={dateFilter}
@@ -199,27 +209,29 @@ const CardView = () => (
         )}
         <select
           value={userFilter}
-          onChange={e => {
-            console.log('User filter changed:', e.target.value);
-            setUserFilter(e.target.value)}}
+          onChange={(e) => {
+            console.log("User filter changed:", e.target.value);
+            setUserFilter(e.target.value);
+          }}
           className="border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="">All Users</option>
-          {users.map(user => (
-            <option key={user._id} value={user._id}>{user.name}</option>
+          {users.map((user) => (
+            <option key={user._id} value={user._id}>
+              {user.name}
+            </option>
           ))}
         </select>
         <div className="flex items-center space-x-2 ml-auto">
           <Button
-            onClick={() => setView('cards')}
-            variant={view === 'cards' ? 'default' : 'secondary'}
+            onClick={() => setView("cards")}
+            variant={view === "cards" ? "default" : "secondary"}
           >
             Cards
           </Button>
           <Button
-            onClick={() => setView('table')}
-            variant={view === 'table' ? 'default' : 'secondary'}
-            
+            onClick={() => setView("table")}
+            variant={view === "table" ? "default" : "secondary"}
           >
             Table
           </Button>
@@ -240,8 +252,10 @@ const CardView = () => (
         <div className="text-center py-8 bg-gray-50 rounded-lg">
           <p className="text-gray-500">No standups found for this filter</p>
         </div>
+      ) : view === "cards" ? (
+        <CardView />
       ) : (
-        view === 'cards' ? <CardView /> : <TableView />
+        <TableView />
       )}
     </div>
   );

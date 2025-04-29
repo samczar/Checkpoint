@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import api from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import { standupService } from "../services/api";
+import { DateTime } from 'luxon';
 import {
   Select,
   SelectContent,
@@ -32,7 +33,9 @@ export default function StandupForm() {
   const { showToast } = useToast();
 
   // Get today's date in YYYY-MM-DD format
-  const today = new Date().toISOString().slice(0, 10);
+  const today = DateTime.now()
+  .setZone('Pacific/Auckland')
+  .toFormat('yyyy-MM-dd');
 
 
   useEffect(() => {
