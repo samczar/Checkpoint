@@ -3,8 +3,8 @@ import { Schema, model, Types } from 'mongoose';
 import { IStandup } from '../typing/IStandup';
 
 const standupSchema = new Schema<IStandup>({
-  userId: { type: String, ref: 'User', required: true },
-  date: { type: String, required: true, unique: true }, // YYYY-MM-DD
+  userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  date: { type: String, required: true }, // YYYY-MM-DD
   yesterday: { type: String, required: true },
   today: { type: String, required: true },
   blockers: { type: String },
