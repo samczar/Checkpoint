@@ -66,7 +66,7 @@ export function AuthProviderComponent({ children }: { children: React.ReactNode 
   const signup = async (email: string, password: string, name: string) => {
     try {
     const response = await api.post('/auth/signup', { email, password, name });
-    const { token: newToken, user: userData } = response.data;
+    const { token: newToken } = response.data;
        // Store token and update headers
        localStorage.setItem('token', newToken);
        api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;

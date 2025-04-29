@@ -1,5 +1,5 @@
 // frontend/src/components/StandupForm.tsx
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import api from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import { standupService } from "../services/api";
@@ -26,7 +26,7 @@ export default function StandupForm() {
   });
   const [loading, setLoading] = useState(false);
   const [standups, setStandups] = useState([]);
-  const [error, setError] = useState("");
+  // const [error, setError] = useState("");
   const [editMode, setEditMode] = useState(false);
   const [hasEntryToday, setHasEntryToday] = useState(false);
   const { showToast } = useToast();
@@ -52,7 +52,6 @@ export default function StandupForm() {
         })
         .catch((err) => {
           console.error("Failed to fetch standups:", err);
-          setError("Failed to load standups. Please try again.");
           setLoading(false);
         });
     }

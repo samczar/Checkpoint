@@ -22,7 +22,7 @@ export default function HistoryView() {
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<SortBy>("date-desc");
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  // const [totalPages, setTotalPages] = useState(1);
   const itemsPerPage = 5;
 
   const fetchStandups = async (page = 1) => {
@@ -40,10 +40,10 @@ export default function HistoryView() {
       let data: Standup[] = [];
       if (res.data.standups && res.data.totalPages) {
         data = res.data.standups;
-        setTotalPages(res.data.totalPages);
+        // setTotalPages(res.data.totalPages);
       } else {
         data = res.data;
-        setTotalPages(Math.ceil(res.data.length / itemsPerPage));
+        // setTotalPages(Math.ceil(res.data.length / itemsPerPage));
       }
 
       // Client-side sort

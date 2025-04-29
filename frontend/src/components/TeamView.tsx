@@ -1,5 +1,5 @@
 // frontend/src/components/TeamView.tsx
-import React, { useEffect, useState } from 'react';
+import  { useEffect, useState } from 'react';
 import api from '../services/api';
 import { Button } from "@/components/ui/button";
 
@@ -62,8 +62,6 @@ export default function TeamView() {
     // eslint-disable-next-line
   }, [dateFilter, range, userFilter]);
 
-
-  console.log('Team standups fetched successfully:', teamStandups);
 
   const formatDate = (dateString: string) => {
     const options: Intl.DateTimeFormatOptions = { 
