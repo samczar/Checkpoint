@@ -5,13 +5,16 @@ This is a daily standup tracker application with focus on:  Asynchronous team co
 # Checkpoint - Daily Standup Tracker
 
 ## 🌟 Live Demo
-[Link to deployed application]
+[Link to deployed application\]](https://checkpoint-q0az.onrender.com/)
 
 ## 🚀 Quick Start
 1. Clone the repository
 2. Install dependencies
 3. Set up environment variables
 4. Run development servers
+
+git clone https://github.com/samczar/Checkpoint.git
+cd Checkpoint
 
 ## 🛠️ Tech Stack
 - Frontend: React + TypeScript
@@ -29,7 +32,6 @@ This is a daily standup tracker application with focus on:  Asynchronous team co
 
 ## 🧪 Testing
 - Run tests: `npm test`
-- Coverage report: `npm run test:coverage`
 
 ## 📱 Responsive Design
 - Mobile-first approach
@@ -41,3 +43,8 @@ Monorepo Structure (Recommended)
 checkpoint/
   ├── backend/
   └── frontend/
+
+2. Things I would improve or add in the future
+- Dark Mode and Light Mode Functionality
+- Markdown support in standup entries
+
